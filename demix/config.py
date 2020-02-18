@@ -1,3 +1,11 @@
+import configparser
+import os
+from demix.utils.directory import current_directory
 
-def setup_app_config(app, dir):
-    app.config['UPLOAD_FOLDER'] = dir
+CONFIG = current_directory(__file__) + "/demix.cfg"
+
+def get_cfg(section):
+    config = configparser.ConfigParser()
+    config.read(CONFIG)
+    api = config.items(section)
+    return dict(api)
