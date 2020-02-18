@@ -3,3 +3,4 @@ venv
 pretrained_models
 test_music
 raw
+.vscode

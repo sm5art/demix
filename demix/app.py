@@ -11,7 +11,7 @@ IN_FOLDER = current_directory(__file__) + "/raw/in"
 OUT_FOLDER = current_directory(__file__) + "/raw/out"
 app = Flask(__name__)
 setup_app_config(app, IN_FOLDER)
-separator = Separator('spleeter:2stems')
+separator = Separator('spleeter:4stems')
 
 def allowed_file(filename):
     return '.' in filename and \
