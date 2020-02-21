@@ -1,5 +1,5 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, jsonify
+from flask import Flask, flash, request, redirect, url_for, jsonify, send_file
 from spleeter.separator import Separator
 from werkzeug.utils import secure_filename
 import requests
@@ -77,9 +77,9 @@ def upload_file():
             output_file = os.path.join(IN_FOLDER, filename)
             fil.save(output_file)
             separator.separate_to_file(output_file, OUT_FOLDER)
-            shutil.make_archive('%s/%s' % (OUT_FOLDER, name), 'zip', '%s/%s' % (OUT_FOLDER, name))
-            
-            return redirect('/')
+            folder = '%s/%s' % (OUT_FOLDER, name)
+            shutil.make_archive(folder, 'zip', folder)
+            return send_file("%s.zip" % folder)
     return '''
     <!doctype html>
     <title>Upload new File</title>
