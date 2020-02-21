@@ -1,10 +1,12 @@
 import os
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, jsonify
 from spleeter.separator import Separator
 from werkzeug.utils import secure_filename
 import requests
 import json
 from oauthlib.oauth2 import WebApplicationClient
+import shutil
+import re
 
 from demix.auth import encode, decode
 from demix.config import get_cfg
@@ -20,10 +22,11 @@ GOOGLE_DISCOVERY_URL = (
     "https://accounts.google.com/.well-known/openid-configuration"
 )
 cfg = get_cfg('google')
+pattern = re.compile(r'(.+?)\.[^.]*$|$')
 
 print("CFG+++++++++++++++++++"+str(cfg))
 app = Flask(__name__)
-separator = Separator('spleeter:4stems')
+separator = Separator('spleeter:4stems-16kHz')
 client = WebApplicationClient(cfg['client_id'])
 db = get_db()
 
@@ -33,6 +36,24 @@ def allowed_file(filename):
            
 #TODO WRITE MIDDLEWARE THAT LOGS ANY WEBPAGE VISIT TO A TABLE
 #TODO WRITE BLACKLIST FOR LOGOUT FUNCTIONALIY
+def auth_failed():
+    return jsonify({"error":'auth failed'})
+
+def protected(func):
+    def wrapper():
+        token = request.headers.get('token')
+        try:
+            auth_data = decode(token)
+            print(auth_data)
+            if auth_data['user']:
+                return func()
+            else:
+                return auth_failed()
+        except Exception:
+            return auth_failed()
+    return wrapper
+
+        
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -50,10 +71,14 @@ def upload_file():
         if fil and allowed_file(fil.filename):
             # file succeded
             filename = secure_filename(fil.filename)
+            name = pattern.match(filename).group(1)
+            print(name)
+            print('%s/%s' % (OUT_FOLDER, name))
             output_file = os.path.join(IN_FOLDER, filename)
             fil.save(output_file)
             separator.separate_to_file(output_file, OUT_FOLDER)
-
+            shutil.make_archive('%s/%s' % (OUT_FOLDER, name), 'zip', '%s/%s' % (OUT_FOLDER, name))
+            
             return redirect('/')
     return '''
     <!doctype html>
@@ -107,8 +132,13 @@ def callback():
     userinfo_response = requests.get(uri, headers=headers, data=body)
     data = userinfo_response.json()
     if userinfo_response.json().get("email_verified"):
-        user_id = db.user.insert_one(data).inserted_id
+        user_id = db.user.update_one(data, {"$set": data}, upsert=True)
         encoded=encode(data['email'])
         return "ENCODED:\n%s\nDECODED:\n%s" % (encoded, decode(encoded))
     else:
         return "User email not available or not verified by Google.", 400
+
+@app.route("/protected")
+@protected
+def test():
+    return "this is a flag"
