@@ -14,7 +14,7 @@ from demix.utils.directory import current_directory
 from demix.db import get_db
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
+# TODO: REMOVE FILE AFTER PROCESSING
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
 IN_FOLDER = current_directory(__file__) + "/raw/in"
 OUT_FOLDER = current_directory(__file__) + "/raw/out"
@@ -24,11 +24,17 @@ GOOGLE_DISCOVERY_URL = (
 cfg = get_cfg('google')
 pattern = re.compile(r'(.+?)\.[^.]*$|$')
 
+def init_seperator():
+    return Separator('spleeter:4stems-16kHz')
+
 print("CFG+++++++++++++++++++"+str(cfg))
 app = Flask(__name__)
-separator = Separator('spleeter:4stems-16kHz')
+separator = init_seperator()
+
 client = WebApplicationClient(cfg['client_id'])
 db = get_db()
+
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -39,17 +45,24 @@ def allowed_file(filename):
 def auth_failed():
     return jsonify({"error":'auth failed'})
 
+def current_user():
+    token = request.headers.get('token')
+    try:
+        auth_data = decode(token)
+        if auth_data['user']:
+            return auth_data
+        else:
+            return None
+    except Exception:
+        return None
+
+
 def protected(func):
-    def wrapper():
-        token = request.headers.get('token')
-        try:
-            auth_data = decode(token)
-            print(auth_data)
-            if auth_data['user']:
-                return func()
-            else:
-                return auth_failed()
-        except Exception:
+    def wrapper(**kwargs):
+        user = current_user()
+        if user is not None:
+            return func(**kwargs)
+        else:
             return auth_failed()
     return wrapper
 
@@ -76,7 +89,7 @@ def upload_file():
             print('%s/%s' % (OUT_FOLDER, name))
             output_file = os.path.join(IN_FOLDER, filename)
             fil.save(output_file)
-            separator.separate_to_file(output_file, OUT_FOLDER)
+            separator.separate_to_file(output_file, OUT_FOLDER, bitrate='16k')
             folder = '%s/%s' % (OUT_FOLDER, name)
             shutil.make_archive(folder, 'zip', folder)
             return send_file("%s.zip" % folder)

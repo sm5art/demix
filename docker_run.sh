@@ -1,0 +1,1 @@
+docker run --net=host --gpus=all -it demix 
