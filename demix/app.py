@@ -1,5 +1,6 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, jsonify, send_file
+from flask_cors import CORS
 from spleeter.separator import Separator
 from werkzeug.utils import secure_filename
 import requests
@@ -7,11 +8,12 @@ import json
 from oauthlib.oauth2 import WebApplicationClient
 import shutil
 import re
+import datetime
 
 from demix.auth import encode, decode
 from demix.config import get_cfg
 from demix.utils.directory import current_directory
-from demix.db import get_db
+from demix.db import get_db, ObjectId
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 # TODO: REMOVE FILE AFTER PROCESSING
@@ -29,6 +31,7 @@ def init_seperator():
 
 print("CFG+++++++++++++++++++"+str(cfg))
 app = Flask(__name__)
+CORS(app)
 separator = init_seperator()
 
 client = WebApplicationClient(cfg['client_id'])
@@ -87,12 +90,19 @@ def upload_file():
             name = pattern.match(filename).group(1)
             print(name)
             print('%s/%s' % (OUT_FOLDER, name))
+            folder = '%s/%s' % (OUT_FOLDER, name)
             output_file = os.path.join(IN_FOLDER, filename)
             fil.save(output_file)
+            data={
+                "secure_filename": filename, 
+                "datetime": datetime.datetime.now(),
+                "local_filename": output_file,
+                "processed_output": folder,
+            }
+            data_id = db.uploaded_file.insert_one(data).inserted_id
             separator.separate_to_file(output_file, OUT_FOLDER, bitrate='16k')
-            folder = '%s/%s' % (OUT_FOLDER, name)
             shutil.make_archive(folder, 'zip', folder)
-            return send_file("%s.zip" % folder)
+            return jsonify({"data_id" : str(data_id)})
     return '''
     <!doctype html>
     <title>Upload new File</title>
@@ -102,6 +112,12 @@ def upload_file():
       <input type=submit value=Upload>
     </form>
     '''
+
+@app.route('/result/<result_id>')
+def get_result(result_id):
+    result = db.uploaded_file.find_one({"_id": ObjectId(result_id)})
+    folder = result['processed_output']
+    return send_file("%s.zip" % folder)
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()

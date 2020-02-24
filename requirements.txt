@@ -5,6 +5,7 @@ chardet==3.0.4
 Click==7.0
 ffmpeg-python==0.2.0
 Flask==1.1.1
+Flask-Cors==3.0.8
 future==0.18.2
 gast==0.3.3
 google-pasta==0.1.8
