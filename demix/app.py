@@ -1,6 +1,6 @@
 # TODO: REMOVE FILE AFTER PROCESSING
 # TODO WRITE MIDDLEWARE THAT LOGS ANY WEBPAGE VISIT TO A TABLE
-# TODO WRITE BLACKLIST FOR LOGOUT FUNCTIONALIY
+# TODO WRITE LIMIT TO /upload endpoint only 10 per user
 
 import os
 from flask import Flask, flash, request, redirect, url_for, jsonify, send_file
@@ -99,6 +99,7 @@ def upload_file():
             "datetime": datetime.datetime.now(),
             "local_filename": output_file,
             "processed_output": folder,
+            "user": current_user()['user']
         }
         data_id = db.uploaded_file.insert_one(data).inserted_id
         separator.separate_to_file(output_file, OUT_FOLDER, bitrate='16k')
