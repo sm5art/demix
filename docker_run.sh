@@ -1,1 +1,1 @@
-docker run -p 5000:5000 -it demix 
+docker run --net=host -it demix 
