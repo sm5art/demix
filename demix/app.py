@@ -31,7 +31,7 @@ cfg = get_cfg('google')
 pattern = re.compile(r'(.+?)\.[^.]*$|$')
 
 def init_seperator():
-    return Separator('spleeter:4stems-16kHz')
+    return Separator('spleeter:4stems-24kHz')
 
 app = Flask(__name__)
 CORS(app)

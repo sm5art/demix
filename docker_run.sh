@@ -1,1 +1,1 @@
-docker run --net=host -it demix 
+docker run -p 80:80 -it demix 
