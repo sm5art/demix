@@ -6,3 +6,5 @@ raw
 .vscode
 demix.cfg
 public
+nginx.crt
+nginx.key
