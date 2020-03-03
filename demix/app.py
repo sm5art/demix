@@ -31,7 +31,7 @@ cfg = get_cfg('google')
 pattern = re.compile(r'(.+?)\.[^.]*$|$')
 
 def init_seperator():
-    return Separator('spleeter:4stems-24kHz')
+    return Separator('spleeter:4stems-16kHz')
 
 app = Flask(__name__)
 CORS(app)
@@ -73,7 +73,7 @@ def allowed_file(filename):
 def upload_file_error():   
     return jsonify({"error": 'file incorrect'})
 
-@app.route('/', methods=['POST'])
+@app.route('/api/post_file', methods=['POST'])
 @protected
 def upload_file():
     # check if the post request has the file part
@@ -105,8 +105,9 @@ def upload_file():
         separator.separate_to_file(output_file, OUT_FOLDER, bitrate='16k')
         shutil.make_archive(folder, 'zip', folder)
         return jsonify({"data_id" : str(data_id)})
+    return upload_file_error()
 
-@app.route('/result/<result_id>')
+@app.route('/api/result/<result_id>')
 def get_result(result_id):
     result = db.uploaded_file.find_one({"_id": ObjectId(result_id)})
     folder = result['processed_output']
@@ -115,7 +116,7 @@ def get_result(result_id):
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
 
-@app.route("/login")
+@app.route("/api/login")
 def login():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -125,12 +126,12 @@ def login():
     # scopes that let you retrieve user's profile from Google
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri=request.base_url + "/callback",
+        redirect_uri=cfg['google_redirect_url'],
         scope=["openid", "email", "profile"],
     )
     return redirect(request_uri)
 
-@app.route("/login/callback")
+@app.route("/api/login/callback")
 def callback():
     # Get authorization code Google sent back to you
     code = request.args.get("code")
@@ -138,7 +139,7 @@ def callback():
     token_endpoint = google_provider_cfg["token_endpoint"]
     token_url, headers, body = client.prepare_token_request(token_endpoint,
         authorization_response=request.url,
-        redirect_url=request.base_url,
+        redirect_url=cfg['google_redirect_url'],
         code=code
     )
     token_response = requests.post(
