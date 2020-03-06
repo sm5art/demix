@@ -13,6 +13,7 @@ from oauthlib.oauth2 import WebApplicationClient
 import shutil
 import re
 import datetime
+import urllib.parse
 
 from demix.auth import encode, decode
 from demix.config import get_cfg
@@ -156,7 +157,8 @@ def callback():
     if userinfo_response.json().get("email_verified"):
         user_id = db.user.update_one(data, {"$set": data}, upsert=True)
         db.logins.insert_one({"user": data, "date": datetime.datetime.now()})
-        encoded=encode(data['email'])
+        encoded=urllib.parse.quote(encode(data['email']))
+        logger.info(encoded)
         logger.info("USER logged in")
         logger.info(data)
         return redirect("%s?access=%s" % (cfg['redirect_url'], encoded))
