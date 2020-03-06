@@ -1,1 +1,1 @@
-docker run --net=host -it demix 
+docker run -d --net=host -it demix 
