@@ -13,6 +13,7 @@ from oauthlib.oauth2 import WebApplicationClient
 import shutil
 import re
 import datetime
+import hashlib
 import urllib.parse
 
 from demix.auth import encode, decode
@@ -23,6 +24,7 @@ from demix.utils.logging import logger_factory
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
+MAX_FREE_FILE_UPLOADS = 15
 IN_FOLDER = current_directory(__file__) + "/raw/in"
 OUT_FOLDER = current_directory(__file__) + "/raw/out"
 GOOGLE_DISCOVERY_URL = (
@@ -71,8 +73,22 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def custom_error(error_str):
+    return jsonify({"error": error_str})
+
 def upload_file_error():   
-    return jsonify({"error": 'file incorrect'})
+    return custom_error('file incorrect')    
+
+@app.route('/api/files', methods=['GET'])
+@protected
+def get_files():
+    user = current_user()
+    email = user['user']
+    uploaded_files = list(db.uploaded_file.find({"user": email}))
+    return jsonify(list(map(lambda x: {"_id": str(x['_id']), "filename": x['secure_filename'], "date": x['datetime']}, uploaded_files)))
+
+def get_file_count_for_user(user):
+    return db.uploaded_file.count({'user': user})
 
 @app.route('/api/post_file', methods=['POST'])
 @protected
@@ -87,20 +103,32 @@ def upload_file():
         return upload_file_error()
     if fil and allowed_file(fil.filename):
         # file succeded
+        email = current_user()['user']
+        logger.info("email-> %s" % email)
+        if get_file_count_for_user(email) >= MAX_FREE_FILE_UPLOADS:
+            logger.info("reached limit")
+            return custom_error("reached file upload limit")
         filename = secure_filename(fil.filename)
         name = pattern.match(filename).group(1)
-        logger.info(current_user())
         logger.info("NAME of file: "+ name)
         logger.info('OUTFOLDER: %s/%s' % (OUT_FOLDER, name))
         folder = '%s/%s' % (OUT_FOLDER, name)
         output_file = os.path.join(IN_FOLDER, filename)
-        fil.save(output_file)
+        content = fil.read()
+        md5 = hashlib.md5(content).hexdigest()
+        existing_files = db.uploaded_file.find_one({"user": email, "md5": md5})
+        if existing_files is not None:
+            logger.info("File already uploaded %s" % str(existing_files))
+            return custom_error("file already uploaded")
+        with open(output_file, 'wb') as f:
+            f.write(content)
         data={
             "secure_filename": filename, 
             "datetime": datetime.datetime.now(),
             "local_filename": output_file,
             "processed_output": folder,
-            "user": current_user()['user']
+            "user": email,
+            "md5": md5
         }
         data_id = db.uploaded_file.insert_one(data).inserted_id
         separator.separate_to_file(output_file, OUT_FOLDER, bitrate='16k')
