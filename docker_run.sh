@@ -1,1 +1,1 @@
-docker run -d --net=host -it demix 
+docker run -d -p 443:443 -p 80:80 -it demix 
