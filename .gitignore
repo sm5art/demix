@@ -5,6 +5,7 @@ test_music
 raw
 .vscode
 demix.cfg
+demix.docker.cfg
 public
 nginx.crt
 nginx.key
