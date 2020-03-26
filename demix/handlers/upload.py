@@ -63,12 +63,12 @@ def upload_file():
         filename = secure_filename(fil.filename)
         content = fil.read()
         md5 = hashlib.md5(content).hexdigest()
-        safe_filename = md5+str(user_id)
+        safe_filename = md5+str(user_id)+str(stems)
         folder = '%s/%s' % (OUT_FOLDER, safe_filename)
         output_file = os.path.join(IN_FOLDER, safe_filename)
         logger.info("NAME of file: "+ filename)
         logger.info('OUTFOLDER: %s' % folder)
-        existing_files = db.uploaded_file.find_one({"user_id": user_id, "md5": md5})
+        existing_files = db.uploaded_file.find_one({"user_id": user_id, "md5": md5, "stems": stems})
         if existing_files is not None:
             logger.info("File already uploaded %s" % str(existing_files))
             return custom_error("file already uploaded")
@@ -105,5 +105,5 @@ def get_files():
     uploaded_files = list(db.uploaded_file.find({"user_id": user["_id"]}))
     uploaded_files.reverse()
     return jsonify({
-        "data": list(map(lambda x: {"_id": str(x['_id']), "filename": x['secure_filename'], "date": x['datetime']}, uploaded_files))
+        "data": list(map(lambda x: {"_id": str(x['_id']), "filename": x['secure_filename'], "date": x['datetime'], "stems": x['stems']}, uploaded_files))
     })

@@ -29,7 +29,7 @@ db = get_db()
 def me():
     user = current_user()
     del user['_id']
-    return jsonify(user)
+    return jsonify({"data": user })
 
 @auth.route("/api/login")
 def login():
@@ -67,8 +67,11 @@ def callback():
     userinfo_response = requests.get(uri, headers=headers, data=body)
     data = userinfo_response.json()
     if userinfo_response.json().get("email_verified"):
-        user = db.user.update_one({"email": data['email']}, {"$set": data}, upsert=True)
-        user_id = str(db.user.find_one(data)['_id'])
+        user = db.user.find_one({"email": data['email']})
+        if user is None:
+            user_id = str(db.user.insert_one({"google": data, "email": data['email'], "premium": False}).inserted_id)
+        else:
+            user_id = str(user['_id'])
         db.logins.insert_one({"user": user_id, "date": datetime.datetime.now()})
         encoded=urllib.parse.quote(encode(user_id))
         logger.info(encoded)
