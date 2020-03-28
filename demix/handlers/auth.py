@@ -70,7 +70,7 @@ def callback():
     if userinfo_response.json().get("email_verified"):
         user = db.user.find_one({"email": data['email']})
         if user is None:
-            user_id = str(db.user.insert_one({"google": data, "email": data['email'], "premium": False}).inserted_id)
+            user_id = str(db.user.insert_one({"google": data, "email": data['email']}).inserted_id)
         else:
             user_id = str(user['_id'])
         db.logins.insert_one({"user": user_id, "date": datetime.datetime.now()})
