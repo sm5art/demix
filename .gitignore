@@ -9,3 +9,4 @@ demix.docker.cfg
 public
 nginx.crt
 nginx.key
+vscode_demix.code-workspace
