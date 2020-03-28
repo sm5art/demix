@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import os
 import os.path
+import pathlib
 
 from demix.utils.logging import logger_factory
 from demix.utils.flask import current_user, protected, custom_error
@@ -17,6 +18,10 @@ ALLOWED_EXTENSIONS = {'mp3', 'wav'}
 MAX_FREE_FILE_UPLOADS = 15
 IN_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/in"
 OUT_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/out"
+
+# create directories if they do not exist on startup
+pathlib.Path(IN_FOLDER).mkdir(parents=True, exist_ok=True)
+pathlib.Path(OUT_FOLDER).mkdir(parents=True, exist_ok=True)
 
 extract_filename_pattern = re.compile(r'(.+?)\.[^.]*$|$')
 def init_seperator(stems=2):
