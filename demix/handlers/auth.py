@@ -29,6 +29,7 @@ db = get_db()
 def me():
     user = current_user()
     del user['_id']
+    del user['google']['sub']
     return jsonify({"data": user })
 
 @auth.route("/api/login")
