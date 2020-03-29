@@ -94,6 +94,7 @@ def upload_file():
             "local_filename": output_file,
             "processed_output": folder,
             "user_id": user_id,
+            "loading": True,
             "md5": md5,
             "stems": stems
         }
@@ -102,6 +103,7 @@ def upload_file():
             seperator_4stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
         else:
             separator_2stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
+        db.uploaded_file.update_one({'_id': ObjectId(data_id)}, {"$set":{ "loading": False }})
         shutil.make_archive(folder, 'zip', folder)
         return jsonify({"data" : {"data_id": str(data_id)}})
     return upload_file_error()
@@ -119,5 +121,5 @@ def get_files():
     uploaded_files = list(db.uploaded_file.find({"user_id": user["_id"]}))
     uploaded_files.reverse()
     return jsonify({
-        "data": list(map(lambda x: {"_id": str(x['_id']), "filename": x['secure_filename'], "date": x['datetime'], "stems": x['stems']}, uploaded_files))
+        "data": list(map(lambda x: {"_id": str(x['_id']), "filename": x['secure_filename'], "date": x['datetime'], "stems": x['stems'], "loading": x['loading']}, uploaded_files))
     })
