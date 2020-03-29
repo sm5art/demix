@@ -15,7 +15,7 @@ from demix.db import get_db, ObjectId
 from demix.utils.directory import current_directory
 
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
-MAX_FREE_FILE_UPLOADS = 3
+MAX_FREE_FILE_UPLOADS = 8
 IN_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/in"
 OUT_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/out"
 
