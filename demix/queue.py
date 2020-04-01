@@ -21,7 +21,7 @@ def thread_main():
     while True:
         if not q.empty():
             item = q.get()
-            db.uploaded_file.update_many({"processed": False}, {"$inc": { "queue": -1 }})
+            db.uploaded_file.update_many({"processed": False, "queue": { "$gt": 0} }, {"$inc": { "queue": -1 }})
             data_id = item['_id']
             output_file = item['local_filename']
             folder = item['processed_output']
