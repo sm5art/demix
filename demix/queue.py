@@ -39,11 +39,8 @@ t.start()
 
 def enqueue(item):
     q.put(item)
-    print(item)
-    print(queue_size())
     return queue_size()
 
 def queue_size():
-    print(q.qsize())
     return q.qsize()
 

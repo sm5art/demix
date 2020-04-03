@@ -14,7 +14,7 @@ from demix.queue import enqueue, queue_size
 from demix.utils.directory import current_directory
 
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
-MAX_FREE_FILE_UPLOADS = 8
+MAX_FREE_FILE_UPLOADS = 5
 IN_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/in"
 OUT_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/out"
 
@@ -22,6 +22,7 @@ pathlib.Path(IN_FOLDER).mkdir(parents=True, exist_ok=True)
 pathlib.Path(OUT_FOLDER).mkdir(parents=True, exist_ok=True)
 
 extract_filename_pattern = re.compile(r'(.+?)\.[^.]*$|$')
+email_pattern = re.compile(r'^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$')
 upload = Blueprint('upload', __name__,)
 logger = logger_factory(__name__)
 db = get_db()
@@ -69,6 +70,15 @@ def get_file_count_for_user_id(user_id):
 def file_count():
     user = current_user()
     return jsonify({"data": get_file_count_for_user_id(user['_id'])})
+
+@upload.route('/api/notify', methods=['POST'])
+def notify():
+    email = request.form.get('email', type=str)
+    print(email)
+    if email_pattern.match(email) is not None:
+        if db.notify_list.find_one({"email": email}) is None:
+            db.notify_list.insert_one({"email": email, "date": datetime.datetime.now() })
+    return jsonify({})
 
 
 @upload.route('/api/post_file', methods=['POST'])
