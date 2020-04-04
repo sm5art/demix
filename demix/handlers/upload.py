@@ -14,7 +14,7 @@ from demix.queue import enqueue, queue_size
 from demix.utils.directory import current_directory
 
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
-MAX_FREE_FILE_UPLOADS = 5
+MAX_FREE_FILE_UPLOADS = 7
 IN_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/in"
 OUT_FOLDER = os.path.abspath(os.path.join(current_directory(__file__), os.pardir)) + "/raw/out"
 
@@ -61,7 +61,7 @@ def upload_file_error():
     return custom_error('file incorrect')    
 
 def get_file_count_for_user_id(user_id):
-    val = db.uploaded_file.count({'user_id': user_id, 'datetime': {'$gt': datetime.datetime.now() - datetime.timedelta(days=1)}})
+    val = db.uploaded_file.count({'user_id': user_id, 'datetime': {'$gt': datetime.datetime.now() - datetime.timedelta(days=5)}})
     logger.info(val)
     return val
 
@@ -74,7 +74,6 @@ def file_count():
 @upload.route('/api/notify', methods=['POST'])
 def notify():
     email = request.form.get('email', type=str)
-    print(email)
     if email_pattern.match(email) is not None:
         if db.notify_list.find_one({"email": email}) is None:
             db.notify_list.insert_one({"email": email, "date": datetime.datetime.now() })
