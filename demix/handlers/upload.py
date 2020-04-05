@@ -61,7 +61,7 @@ def upload_file_error():
     return custom_error('file incorrect')    
 
 def get_file_count_for_user_id(user_id):
-    val = db.uploaded_file.count({'user_id': user_id, 'datetime': {'$gt': datetime.datetime.now() - datetime.timedelta(days=5)}})
+    val = db.uploaded_file.count({'user_id': user_id, 'datetime': {'$gt': datetime.datetime.now() - datetime.timedelta(days=1)}})
     logger.info(val)
     return val
 
