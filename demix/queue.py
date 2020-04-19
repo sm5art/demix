@@ -26,11 +26,14 @@ def thread_main():
             output_file = item['local_filename']
             folder = item['processed_output']
             stems = item['stems']
-            if stems == 4:
-                seperator_4stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
-            else:
-                separator_2stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
-            shutil.make_archive(folder, 'zip', folder)
+            try:
+                if stems == 4:
+                    seperator_4stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
+                else:
+                    separator_2stems.separate_to_file(output_file, OUT_FOLDER, bitrate='128k')
+                shutil.make_archive(folder, 'zip', folder)
+            except Exception as e:
+                pass
             db.uploaded_file.update_one({'_id': ObjectId(data_id)}, {"$set":{ "processed": True }})
         time.sleep(POLL_PERIOD)
 
