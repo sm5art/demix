@@ -6,6 +6,7 @@ raw
 .vscode
 demix.cfg
 demix.local.cfg
+demix.prod.cfg
 demix.docker.cfg
 public
 nginx.crt

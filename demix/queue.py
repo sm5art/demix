@@ -6,10 +6,24 @@ import shutil
 import time
 
 from demix.db import ObjectId, get_db
+from demix.utils.logging import logger_factory
 from demix.utils.directory import current_directory
+
+def enqueue(item):
+    q.put(item)
+    return queue_size()
+
+def queue_size():
+    return q.qsize()
+
 
 q = queue.Queue()
 db = get_db()
+logger = logger_factory(__name__)
+for f in db.uploaded_file.find({"processed": False}):
+    logger.info(f)
+    enqueue(f)
+
 def init_seperator(stems=2):
     return Separator('spleeter:%dstems-16kHz' % stems)
 separator_2stems = init_seperator()
@@ -39,11 +53,3 @@ def thread_main():
 
 t = threading.Thread(target=thread_main)
 t.start()
-
-def enqueue(item):
-    q.put(item)
-    return queue_size()
-
-def queue_size():
-    return q.qsize()
-
