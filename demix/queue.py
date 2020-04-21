@@ -20,9 +20,6 @@ def queue_size():
 q = queue.Queue()
 db = get_db()
 logger = logger_factory(__name__)
-for f in db.uploaded_file.find({"processed": False}):
-    logger.info(f)
-    enqueue(f)
 
 def init_seperator(stems=2):
     return Separator('spleeter:%dstems-16kHz' % stems)
