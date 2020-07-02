@@ -1,4 +1,6 @@
 # demix
+## Description
+API worker that powers an online tool to drop in audio files to separate vocals and instrumentals from the file.
 
 ## Installation
 1. Install Python 3.6/3.7 and virtualenv
